@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Relaciones Públicas 360 — Generador de boletín</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0F1419;
+    --slate:#4A5560;
+    --mist:#8A939C;
+    --paper:#EFEFE9;
+    --card:#FFFFFF;
+    --pine:#14594A;
+    --pine-soft:#E4EDE9;
+    --amber:#D9A22B;
+    --amber-soft:#FAF1DC;
+    --rule:#DBDAD1;
+    --display:"Bricolage Grotesque","Helvetica Neue",Arial,sans-serif;
+    --body:"Source Serif 4",Georgia,serif;
+    --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  button{font:inherit;cursor:pointer}
+  input,textarea,select{font:inherit;color:inherit}
+
+  .topbar{
+    position:sticky;top:0;z-index:20;background:var(--ink);color:#fff;
+    display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:12px 18px;border-bottom:3px solid var(--amber);
+  }
+  .brandmark{display:flex;align-items:baseline;gap:10px;margin-right:auto}
+  .brandmark b{font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:-.02em}
+  .brandmark span{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#9AA6AE}
+  .act{
+    background:transparent;color:#E8EAE6;border:1px solid #333C44;border-radius:2px;padding:8px 12px;
+    font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+    transition:background .15s,border-color .15s,color .15s;
+  }
+  .act:hover{background:#1C242B;border-color:#5A666F}
+  .act.primary{background:var(--pine);border-color:var(--pine);color:#fff}
+  .act.primary:hover{background:#0F4739}
+  .act:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+
+  .shell{display:grid;grid-template-columns:minmax(340px,46%) 1fr;min-height:calc(100vh - 60px)}
+  .editor{padding:20px 18px 60px;border-right:1px solid var(--rule)}
+  .stage{padding:20px 18px 60px;background:#E4E4DD}
+  @media (max-width:940px){.shell{grid-template-columns:1fr}.editor{border-right:0;border-bottom:1px solid var(--rule)}}
+
+  .tabs{display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid var(--ink)}
+  .tab{
+    background:transparent;border:0;padding:9px 14px;
+    font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mist);
+  }
+  .tab[aria-selected="true"]{background:var(--ink);color:#fff}
+  .pane{display:none}
+  .pane.on{display:block}
+
+  .eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--mist);margin:0 0 10px}
+  .panel{background:var(--card);border:1px solid var(--rule);border-radius:3px;padding:16px;margin-bottom:14px}
+  .panel > h2{font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:-.01em;margin:0 0 12px;display:flex;align-items:center;gap:8px}
+  .panel > h2::before{content:"";width:14px;height:3px;background:var(--pine);display:inline-block}
+
+  label{display:block;margin-bottom:10px}
+  label > i{font-style:normal;display:block;font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--slate);margin-bottom:4px}
+  input[type=text],textarea,select{width:100%;background:#FCFCFA;border:1px solid var(--rule);border-radius:2px;padding:8px 9px;font-family:var(--body);font-size:14px}
+  textarea{resize:vertical;min-height:66px;line-height:1.5}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media (max-width:520px){.row2{grid-template-columns:1fr}}
+
+  .sec{border:1px solid var(--rule);border-left:4px solid var(--pine);border-radius:3px;background:var(--card);margin-bottom:14px}
+  .sec-head{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--rule)}
+  .sec-head .num{font-family:var(--mono);font-size:11px;color:var(--mist)}
+  .sec-head h3{margin:0;font-family:var(--display);font-weight:700;font-size:14px;flex:1}
+  .sec-body{padding:14px}
+  .nota{border-top:1px dashed var(--rule);padding-top:12px;margin-top:12px}
+  .nota:first-of-type{border-top:0;padding-top:0;margin-top:0}
+  .nota-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .tag{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;background:var(--pine-soft);color:var(--pine);padding:3px 7px;border-radius:2px}
+  .mini{background:transparent;border:1px solid var(--rule);border-radius:2px;color:var(--slate);font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;padding:5px 8px}
+  .mini:hover{border-color:var(--ink);color:var(--ink)}
+  .mini.danger:hover{border-color:#A63A2A;color:#A63A2A}
+  .mini.go{border-color:var(--pine);color:var(--pine)}
+  .mini.go:hover{background:var(--pine);color:#fff}
+  .limit{font-family:var(--mono);font-size:10.5px;color:var(--mist);margin-top:10px}
+
+  /* ---- buscador ---- */
+  .searchbar{display:flex;gap:8px;margin-bottom:10px}
+  .searchbar input{flex:1}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+  .chip{
+    background:#fff;border:1px solid var(--rule);border-radius:20px;padding:5px 11px;
+    font-family:var(--mono);font-size:10.5px;color:var(--slate);
+  }
+  .chip:hover{border-color:var(--pine);color:var(--pine)}
+  .hallazgo{background:var(--card);border:1px solid var(--rule);border-left:4px solid var(--amber);border-radius:3px;padding:14px;margin-bottom:12px}
+  .hallazgo h4{font-family:var(--display);font-weight:700;font-size:15px;margin:0 0 5px;line-height:1.3}
+  .procedencia{font-family:var(--mono);font-size:10.5px;color:var(--slate);border-bottom:1px solid var(--rule);padding-bottom:8px;margin-bottom:9px}
+  .hallazgo p{margin:0 0 9px;font-size:14px;line-height:1.55;color:#2A323A}
+  .porque{background:var(--pine-soft);border-left:3px solid var(--pine);padding:8px 11px;font-size:13.5px;color:#173F35;margin-bottom:10px}
+  .porque b{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;display:block;color:var(--pine);margin-bottom:2px;font-weight:500}
+  .colocar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .colocar select{flex:1;min-width:180px;font-size:13px;padding:6px 8px}
+  a.fuente{font-family:var(--mono);font-size:10.5px;color:var(--pine);text-decoration:underline;letter-spacing:.05em}
+  .working{font-family:var(--mono);font-size:11.5px;color:var(--slate);padding:14px 0;letter-spacing:.05em}
+  .vacio{border:1px dashed var(--rule);border-radius:3px;padding:22px 16px;text-align:center;color:var(--mist);font-size:14px}
+
+  .stage-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+  .stage-head .eyebrow{margin:0}
+  .metrics{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--slate);letter-spacing:.05em}
+  .frame{background:#fff;border:1px solid #C9C9C0;box-shadow:0 1px 0 rgba(0,0,0,.05);max-width:660px;margin:0 auto}
+  iframe{width:100%;border:0;display:block;min-height:600px}
+
+  .flash{
+    position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(12px);
+    background:var(--ink);color:#fff;padding:11px 16px;border-radius:3px;
+    font-family:var(--mono);font-size:12px;letter-spacing:.04em;opacity:0;pointer-events:none;
+    transition:opacity .2s,transform .2s;z-index:60;max-width:90vw;text-align:center;
+  }
+  .flash.on{opacity:1;transform:translateX(-50%) translateY(0)}
+  .note-box{background:var(--amber-soft);border:1px solid #E8D5A8;border-radius:3px;padding:12px 14px;font-size:13.5px;color:#5A4412;margin-bottom:14px}
+  .note-box b{font-family:var(--display)}
+
+  .reader{display:none;background:#E4E4DD;padding:26px 16px 70px}
+  body.reading .shell{display:none}
+  body.reading .reader{display:block}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brandmark"><b>RP 360</b><span>Generador de boletín</span></div>
+  <button class="act" id="btnReader">Vista de lector</button>
+  <button class="act" id="btnCopy">Copiar HTML para correo</button>
+  <button class="act" id="btnDownload">Descargar .html</button>
+  <button class="act primary" id="btnPublish">Publicar enlace</button>
+</div>
+
+<div class="shell">
+  <div class="editor">
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" aria-selected="true" data-pane="redaccion">Redacción</button>
+      <button class="tab" role="tab" aria-selected="false" data-pane="buscador">Buscador de fuentes</button>
+    </div>
+
+    <!-- ============ REDACCIÓN ============ -->
+    <div class="pane on" id="pane-redaccion">
+      <div class="panel">
+        <h2>Cabecera</h2>
+        <div class="row2">
+          <label><i>Marca</i><input type="text" data-meta="marca"></label>
+          <label><i>Bajada</i><input type="text" data-meta="subtitulo"></label>
+        </div>
+        <div class="row2">
+          <label><i>Edición</i><input type="text" data-meta="numero"></label>
+          <label><i>Fecha</i><input type="text" data-meta="fecha"></label>
+        </div>
+        <div class="row2">
+          <label><i>Periodicidad</i><input type="text" data-meta="periodicidad"></label>
+          <label><i>Próxima edición</i>
+            <span style="display:flex;gap:6px">
+              <input type="text" data-meta="proxima">
+              <button class="mini" id="btnMas14" title="Calcular quince días después de la fecha de esta edición" style="white-space:nowrap">+14 d</button>
+            </span>
+          </label>
+        </div>
+        <label><i>Curaduría</i><input type="text" data-meta="editor"></label>
+        <label><i>Entrada</i><textarea data-meta="entrada"></textarea></label>
+      </div>
+
+      <div id="secciones"></div>
+      <button class="mini" id="btnAddSec">+ Añadir sección</button>
+      <p class="limit" id="limitTxt"></p>
+
+      <div class="panel" style="margin-top:14px">
+        <h2>Cierre</h2>
+        <label><i>Criterio de curaduría</i><textarea data-meta="cierre"></textarea></label>
+        <label><i>Pie / suscripción</i><input type="text" data-meta="pie"></label>
+        <button class="mini danger" id="btnReset">Restaurar contenido original</button>
+      </div>
+
+      <div class="panel">
+        <h2>Ciclo quincenal</h2>
+        <p style="margin:0 0 12px;font-size:13.5px;color:var(--slate)">
+          Al cerrar, esta edición queda archivada y accesible por enlace. Se abre la siguiente con las mismas secciones, sin notas y con las fechas ya corridas quince días.
+        </p>
+        <button class="mini go" id="btnCerrar">Cerrar edición y abrir la siguiente</button>
+        <div id="archivo" style="margin-top:14px"></div>
+      </div>
+    </div>
+
+    <!-- ============ BUSCADOR ============ -->
+    <div class="pane" id="pane-buscador">
+      <div class="note-box">
+        <b>Nada entra solo.</b> El buscador rastrea la web y propone hallazgos con fuente, fecha y resumen. Tú decides cuál colocar y en qué posición: puede añadirse a una sección con espacio o sustituir cualquier nota existente. Verifica siempre el enlace original antes de publicar.
+      </div>
+
+      <div class="searchbar">
+        <input type="text" id="q" placeholder="Ej.: medición de resultados en RP con IA">
+        <button class="act primary" id="btnSearch" style="white-space:nowrap">Buscar</button>
+      </div>
+      <div class="chips" id="chips"></div>
+      <div id="resultados"><div class="vacio">Escribe un tema o toca una de las búsquedas sugeridas.</div></div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="stage-head">
+      <p class="eyebrow">Vista previa del correo · 600 px</p>
+      <span class="metrics" id="metrics"></span>
+    </div>
+    <div class="frame"><iframe id="preview" title="Vista previa del boletín"></iframe></div>
+  </div>
+</div>
+
+<div class="reader">
+  <div class="stage-head" style="max-width:660px;margin:0 auto 12px">
+    <p class="eyebrow">Edición publicada</p>
+    <button class="mini" id="btnBackEdit" style="margin-left:auto">Volver a la redacción</button>
+  </div>
+  <div class="frame"><iframe id="readerFrame" title="Boletín"></iframe></div>
+</div>
+
+<div class="flash" id="flash"></div>
+
+<script>
+/* ============================================================
+   CONTENIDO CURADO — agosto 2026
+   Resúmenes escritos para público mixto: profesionales en ejercicio
+   y estudiantes (se glosa el término técnico la primera vez).
+   ============================================================ */
+const CONTENIDO = {
+  marca: "RELACIONES PÚBLICAS 360",
+  subtitulo: "Tendencias, casos e inteligencia artificial en la práctica de las relaciones públicas",
+  numero: "Edición 01",
+  fecha: "16 de agosto de 2026",
+  periodicidad: "Quincenal",
+  proxima: "30 de agosto de 2026",
+  editor: "Curaduría: Programa de Relaciones Públicas Internacionales · PUCPR",
+  entrada: "Tres secciones, nueve lecturas y una idea de fondo: la inteligencia artificial dejó de ser una herramienta que se prueba y pasó a ser el terreno donde se gana o se pierde la reputación. Cada nota indica su fuente, su fecha y por qué conviene leerla, tanto si diriges una oficina de comunicaciones como si estás aprendiendo el oficio.",
+  cierre: "Criterio de curaduría: se priorizan informes con metodología declarada, medios con firma responsable y fuentes primarias. Cada nota enlaza al original; el resumen no lo sustituye.",
+  pie: "Llega cada dos semanas. ¿Alguien más debería recibirlo? Reenvía este correo o comparte el enlace.",
+  secciones: [
+    {
+      titulo: "Tendencias que están moviendo la práctica",
+      bajada: "Datos de industria publicados en 2026.",
+      notas: [
+        {
+          titulo: "La adopción de IA generativa en RP llegó a su meseta",
+          medio: "Muck Rack · The State of AI in PR 2026",
+          fecha: "21 de enero de 2026",
+          tipo: "Informe de industria",
+          resumen: "El uso de IA generativa entre profesionales de relaciones públicas se estacionó en 76%, apenas un punto por encima del año anterior. Lo que sí creció fue la gobernanza, es decir, las reglas internas que definen quién puede usar qué herramienta y para qué: 51% ya trabaja en organizaciones con una política de uso, frente a 21% en 2024, y 75% paga por al menos una herramienta. Los agentes de IA, programas que ejecutan tareas encadenadas sin supervisión paso a paso, siguen siendo minoría: los usa el 12%. La encuesta recogió 564 respuestas en diciembre de 2025.",
+          porque: "La pregunta del sector ya no es si se usa IA, sino con qué reglas, qué adiestramiento y qué permisos. Para quien ejerce, es una lista de pendientes; para quien estudia, el criterio que le van a pedir en su primer empleo.",
+          url: "https://muckrack.com/resources/research/state-of-ai-in-pr"
+        },
+        {
+          titulo: "La confianza se repliega hacia el círculo cercano",
+          medio: "Edelman Trust Barometer 2026",
+          fecha: "18 de enero de 2026",
+          tipo: "Estudio global",
+          resumen: "El barómetro anual de Edelman, que mide desde hace 26 años la confianza en gobiernos, empresas, medios y organizaciones sin fines de lucro, encontró que siete de cada diez personas se declaran reacias o dudosas a confiar en alguien con valores, posturas o fuentes de información distintas a las suyas. La brecha de confianza entre ingresos altos y bajos se duplicó desde 2012 hasta 15 puntos. Entre los hechos que más movieron la confianza en cinco años figuran la inflación (54%), la desinformación (50%) y el uso creciente de plataformas de IA generativa (37%).",
+          porque: "Segmentar audiencias por edad o ingreso ya no alcanza: hay que mapear círculos de confianza e identificar quién tiene permiso para hablarle a cada uno. Es el argumento más sólido a favor de los voceros internos y los aliados locales.",
+          url: "https://www.edelman.com/trust/2026/trust-barometer"
+        },
+        {
+          titulo: "Las salas de redacción también trabajan con IA",
+          medio: "Muck Rack · State of Journalism 2026",
+          fecha: "19 de marzo de 2026",
+          tipo: "Encuesta a periodistas",
+          resumen: "El 82% de los periodistas encuestados usa herramientas de IA. El 86% dice que al menos parte de sus historias nace de un pitch —la propuesta de tema que un profesional de RP envía a un periodista—, pero el 88% descarta de inmediato el que no corresponde a su cobertura. LinkedIn es la plataforma que más confianza les merece (58%), mientras la desconfianza hacia TikTok sube a 61%. La muestra final fue de 897 periodistas.",
+          porque: "El envío masivo compite hoy contra redacciones que filtran más rápido que nunca. La pertinencia dejó de ser un diferenciador y pasó a ser el requisito mínimo de entrada.",
+          url: "https://www.globenewswire.com/news-release/2026/03/19/3259178/0/en/muck-rack-s-2026-state-of-journalism-report-finds-82-of-journalists-use-ai.html"
+        }
+      ]
+    },
+    {
+      titulo: "Casos y señales de alerta",
+      bajada: "Reputación puesta a prueba en tiempo real.",
+      notas: [
+        {
+          titulo: "Deepfakes: del riesgo hipotético al manual de crisis",
+          medio: "PR News / O'Dwyer's",
+          fecha: "11 de mayo de 2026",
+          tipo: "Análisis de caso",
+          resumen: "Un deepfake es un video o audio sintético que reproduce el rostro o la voz de una persona real. El artículo sostiene que en los primeros meses de 2026 estos contenidos pasaron de amenaza en el horizonte a herramienta en uso, y cita el aviso público del Banco de Italia sobre artículos, imágenes y videos falsos en los que su gobernador aparecía respaldando productos de inversión, reportado por Reuters el 26 de febrero. La conclusión operativa: legal y comunicaciones tienen que actuar coordinados desde el primer minuto, porque esperar a que la falsedad se apague sola es hoy una apuesta perdedora.",
+          porque: "Sirve como base de un simulacro completo: verificación técnica, desmentido público, ruta legal y reloj reputacional corriendo al mismo tiempo.",
+          url: "https://www.odwyerpr.com/story/public/24726/2026-05-11/deepfake-era-has-arrived-pr-is-front-line.html"
+        },
+        {
+          titulo: "El riesgo reputacional que viaja con el creador de contenido",
+          medio: "Estudio Cadem 5C n.º 121 (Chile), vía ANDA",
+          fecha: "11 de agosto de 2026",
+          tipo: "Encuesta de opinión",
+          resumen: "El 74% de las personas encuestadas considera que, cuando un influencer protagoniza una polémica, la imagen de las marcas que representa se daña algo o mucho. Sobre creadores generados con inteligencia artificial, el 44% dejaría de seguir de inmediato a un influencer al descubrir que no es real, y un 14% condicionaría su reacción a que la marca declarara abiertamente el uso de IA.",
+          porque: "Contratar a un creador es asociarse con su credibilidad, no solo con su audiencia. La divulgación del uso de IA pasa de cortesía a cláusula contractual y a punto obligado del protocolo de crisis.",
+          url: "https://anda.cl/influencers-reputacion-marca-estudio-cadem-2026/"
+        },
+        {
+          titulo: "Lo que cuesta que se note la IA",
+          medio: "El Financiero (Costa Rica)",
+          fecha: "28 de junio de 2026",
+          tipo: "Reportaje",
+          resumen: "Una encuesta global de Klaviyo realizada en 2026 halló que los consumidores son cuatro veces más propensos a confiar menos en una marca cuando detectan contenido generado por IA. El mismo reportaje cita un estudio de la Universidad de Zaragoza según el cual las imágenes generadas con IA reducen la intención de usar el servicio anunciado. La lectura de fondo es matizada: el público no rechaza la IA en automático, pero se vuelve más crítico cuando percibe que sustituye algo que esperaba humano.",
+          porque: "El ahorro en producción puede pagarse en confianza. Conviene decidir pieza por pieza qué se declara y qué se mantiene humano, y dejarlo escrito en la guía de marca.",
+          url: "https://www.elfinancierocr.com/negocios/anuncios-creados-con-ia-ahorran-costos-pero-pueden/5FQ6WJUW3NBUXPFLP57LALB6GQ/story/"
+        }
+      ]
+    },
+    {
+      titulo: "IA aplicada al oficio",
+      bajada: "De la herramienta al procedimiento.",
+      notas: [
+        {
+          titulo: "¿Qué está leyendo la IA sobre tu organización?",
+          medio: "Delfino.cr · columna de Adriana Grooscors",
+          fecha: "24 de mayo de 2026",
+          tipo: "Columna de análisis",
+          resumen: "En la era de los motores de respuesta —los sistemas que contestan directamente en lugar de devolver una lista de enlaces— la reputación ya no se construye únicamente frente a audiencias humanas. También frente a sistemas que interpretan, resumen y recomiendan marcas a partir de las fuentes que consideran confiables. La pregunta estratégica que plantea la autora es simple y desarma: qué está leyendo la IA sobre nosotros.",
+          porque: "Auditar cómo aparece la organización en respuestas generadas por IA es tarea de relaciones públicas, no del área de tecnología. Empieza por preguntarle a tres asistentes distintos por tu institución y comparar lo que devuelven.",
+          url: "https://delfino.cr/2026/05/relaciones-publicas-e-inteligencia-artificial-la-nueva-gestion-de-la-reputacion"
+        },
+        {
+          titulo: "Política y adiestramiento: la parte aburrida que decide el resultado",
+          medio: "Muck Rack Blog",
+          fecha: "6 de febrero de 2026",
+          tipo: "Reseña de webinario",
+          resumen: "El adiestramiento formal en IA subió a 43% de las empresas, frente a 35% en 2025 y 21% en 2024. En el webinario, Qualcomm describió un consejo interno de IA con representación de recursos humanos, legal, ingeniería y mercadeo que evalúa cada herramienta antes de liberarla a un grupo de prueba, y solo después al resto de la organización.",
+          porque: "Es un modelo replicable a escala pequeña: una oficina de comunicaciones o una agencia puede armar su propio comité de evaluación con tres personas y un formulario. Como ejercicio de clase, funciona igual de bien.",
+          url: "https://muckrack.com/blog/state-of-ai-in-pr-2026-webinar-recap"
+        },
+        {
+          titulo: "Velocidad algorítmica en la gestión de crisis",
+          medio: "Merca2.0",
+          fecha: "11 de marzo de 2026",
+          tipo: "Análisis",
+          resumen: "Analistas describen una autoridad reputacional algorítmica: los sistemas digitales se convierten en filtros que interpretan y sintetizan la imagen de una organización ante el público. El análisis de sentimiento y los modelos predictivos acortan el tiempo de detección de una crisis, pero la voz final del mensaje sigue exigiendo criterio humano, conocimiento del contexto y lectura del estado emocional del público.",
+          porque: "Permite separar con claridad tres usos distintos: detectar, redactar borradores y decidir. Los dos primeros se delegan a la herramienta; el tercero, nunca.",
+          url: "https://www.merca20.com/la-crisis-que-llega-en-segundos-como-la-ia-esta-cambiando-la-gestion-de-la-reputacion-empresarial/"
+        }
+      ]
+    }
+  ]
+};
+
+const MAX_SEC = 3, MAX_NOTAS = 3;
+let ed = JSON.parse(JSON.stringify(CONTENIDO));
+let hallazgos = [];
+
+const SUGERENCIAS = [
+  "tendencias de relaciones públicas 2026",
+  "casos de crisis reputacional recientes",
+  "IA generativa en comunicación corporativa",
+  "visibilidad de marca en motores de IA (GEO)",
+  "ética y transparencia en el uso de IA",
+  "medición y ROI en relaciones públicas",
+  "desinformación y verificación de contenido",
+  "comunicación institucional en Puerto Rico"
+];
+
+const MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];function parseFechaEs(s){const m = String(s||"").toLowerCase().match(/(\d{1,2})\s+de\s+([a-záéíóúñ]+)\s+de\s+(\d{4})/);if(!m) return null;const mi = MESES.indexOf(m[2]);if(mi < 0) return null;return new Date(+m[3], mi, +m[1]);}
+function fechaEs(d){ return d.getDate() + " de " + MESES[d.getMonth()] + " de " + d.getFullYear(); }
+function sumarDias(s, n){const d = parseFechaEs(s);if(!d) return null;d.setDate(d.getDate() + n);return fechaEs(d);} 
+
+/* ============================================================ */
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+const nl = s => esc(s).replace(/\n/g,"<br>");
+
+function flash(msg){const f = $("#flash");f.textContent = msg; f.classList.add("on");clearTimeout(f._t); f._t = setTimeout(()=>f.classList.remove("on"), 3000);} 
+
+/* ============================================================
+   BOLETÍN EN HTML (tablas + estilos en línea, listo para correo)
+   ============================================================ */
+function buildNewsletter(){const ff = "Georgia,'Times New Roman',serif";const fm = "'Courier New',Courier,monospace";const fs = "Helvetica,Arial,sans-serif";let notaN = 0;const secciones = ed.secciones.map((sec, si) => {const notas = sec.notas.map(n => {notaN++;const link = n.url ? '<div style="margin:10px 0 0"><a href="'+esc(n.url)+'" style="font-family:'+fm+';font-size:11px;letter-spacing:.06em;color:#14594A;text-decoration:underline">LEER LA FUENTE &rarr;</a></div>' : "";const why = n.porque ? '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:12px 0 0"><tr><td style="background:#E4EDE9;border-left:3px solid #14594A;padding:9px 12px"><span style="font-family:'+fm+';font-size:10px;letter-spacing:.12em;color:#14594A">POR QUÉ IMPORTA</span><br><span style="font-family:'+ff+';font-size:14px;line-height:1.5;color:#173F35">'+nl(n.porque)+'</span></td></tr></table>' : "";return ''+ '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 22px">' + '<tr><td style="padding:0 0 6px;font-family:'+fm+';font-size:10px;letter-spacing:.1em;color:#8A939C">' +   String(notaN).padStart(2,"0") + ' &nbsp;·&nbsp; ' + esc(n.tipo || "") + '</td></tr>' + '<tr><td style="padding:0 0 6px;font-family:'+fs+';font-size:18px;line-height:1.3;font-weight:bold;color:#0F1419">'+esc(n.titulo)+'</td></tr>' + '<tr><td style="padding:0 0 9px;border-bottom:1px solid #DBDAD1;font-family:'+fm+';font-size:11px;color:#4A5560">' +   esc(n.medio) + (n.fecha ? ' &nbsp;·&nbsp; ' + esc(n.fecha) : "") + '</td></tr>' + '<tr><td style="padding:10px 0 0;font-family:'+ff+';font-size:15px;line-height:1.6;color:#2A323A">'+nl(n.resumen)+'</td></tr>' + '<tr><td>'+why+link+'</td></tr>' + '</table>';} ).join("");return ''+ '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 10px">' + '<tr><td style="padding:26px 0 4px;border-top:3px solid #0F1419">' +   '<span style="font-family:'+fm+';font-size:10px;letter-spacing:.16em;color:#D9A22B">SECCIÓN 0'+(si+1)+'</span>' + '</td></tr>' + '<tr><td style="padding:2px 0 2px;font-family:'+fs+';font-size:21px;font-weight:bold;letter-spacing:-.01em;color:#0F1419">'+esc(sec.titulo)+'</td></tr>' + '<tr><td style="padding:0 0 18px;font-family:'+ff+';font-style:italic;font-size:14px;color:#4A5560">'+esc(sec.bajada||"")+'</td></tr>' + '</table>' + notas;}).join("");return '' + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#EFEFE9;margin:0;padding:0">' + '<tr><td align="center" style="padding:24px 12px">' + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="width:600px;max-width:100%;background:#FFFFFF;border:1px solid #DBDAD1">' + '<tr><td style="background:#0F1419;padding:26px 30px 22px;border-bottom:4px solid #D9A22B">' +   '<div style="font-family:'+fs+';font-size:27px;font-weight:bold;letter-spacing:-.02em;color:#FFFFFF">'+esc(ed.marca)+'</div>' +   '<div style="font-family:'+ff+';font-size:14px;line-height:1.5;color:#9AA6AE;padding-top:6px">'+esc(ed.subtitulo)+'</div>' +   '<div style="font-family:'+fm+';font-size:10.5px;letter-spacing:.1em;color:#6F7A83;padding-top:14px">'+esc(ed.numero)+' &nbsp;·&nbsp; '+esc(ed.fecha) +     (ed.periodicidad ? ' &nbsp;·&nbsp; <span style="color:#D9A22B">'+esc(ed.periodicidad).toUpperCase()+'</span>' : '')+'</div>' + '</td></tr>' + '<tr><td style="padding:26px 30px 0;font-family:'+ff+';font-size:16px;line-height:1.65;color:#2A323A">'+nl(ed.entrada)+'</td></tr>' + '<tr><td style="padding:16px 30px 0;font-family:'+fm+';font-size:10.5px;letter-spacing:.08em;color:#8A939C">'+esc(ed.editor)+'</td></tr>' + '<tr><td style="padding:6px 30px 0">'+secciones+'</td></tr>' + '<tr><td style="padding:6px 30px 30px"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">' +   '<tr><td style="border-top:3px solid #0F1419;padding:16px 0 0;font-family:'+ff+';font-size:13.5px;line-height:1.6;color:#4A5560">'+nl(ed.cierre)+'</td></tr>' + '</table></td></tr>' + '<tr><td style="background:#EFEFE9;border-top:1px solid #DBDAD1;padding:18px 30px;font-family:'+fm+';font-size:10.5px;line-height:1.7;color:#6F7A83">' +   (ed.proxima ? '<span style="color:#0F1419">PRÓXIMA EDICIÓN: '+esc(ed.proxima).toUpperCase()+'</span><br>' : '') +   esc(ed.pie)+'</td></tr>' + '</table></td></tr></table>';} 
+
+function fullDocument(){return '<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">' + '<meta name="viewport" content="width=device-width,initial-scale=1">' + '<title>' + esc(ed.marca) + ' — ' + esc(ed.numero) + '</title>' + '<meta name="description" content="' + esc(ed.subtitulo) + '">' + '</head><body style="margin:0;padding:0;background:#EFEFE9">' + buildNewsletter() + '</body></html>';} 
+
+/* ============================================================ */
+function renderPreview(){const doc = fullDocument();$("#preview").srcdoc = doc;$("#readerFrame").srcdoc = doc;const notas = ed.secciones.reduce((a,s)=>a+s.notas.length,0);const texto = ed.secciones.flatMap(s=>s.notas.map(n=>n.resumen+" "+n.porque)).join(" ") + " " + ed.entrada;const palabras = texto.trim().split(/\s+/).filter(Boolean).length;$("#metrics").textContent = ed.secciones.length + " secciones · " + notas + " notas · ~" + Math.max(1,Math.round(palabras/200)) + " min de lectura";} 
+
+function autoHeight(frame){frame.onload = () => { try{ frame.style.height = (frame.contentDocument.body.scrollHeight + 20) + "px"; }catch(e){} };}
+autoHeight($("#preview")); autoHeight($("#readerFrame"));
+
+function field(labelTxt, value, oninput, multiline){const l = document.createElement("label");l.innerHTML = "<i>" + esc(labelTxt) + "</i>";const input = document.createElement(multiline ? "textarea" : "input");if(!multiline) input.type = "text";input.value = value || "";input.addEventListener("input", e => { oninput(e.target.value); renderPreview(); });l.appendChild(input);return l;} 
+
+function renderEditor(){document.querySelectorAll("[data-meta]").forEach(el=>{const k = el.dataset.meta;el.value = ed[k] || "";el.oninput = () => { ed[k] = el.value; renderPreview(); };});
+
+const wrap = $("#secciones");wrap.innerHTML = "";ed.secciones.forEach((sec, si) => {const box = document.createElement("div");box.className = "sec";const head = document.createElement("div");head.className = "sec-head";head.innerHTML = '<span class="num">0'+(si+1)+'</span><h3>'+esc(sec.titulo||"Sección sin título")+'</h3>';const del = document.createElement("button");del.className = "mini danger"; del.textContent = "Eliminar";del.onclick = () => { ed.secciones.splice(si,1); renderEditor(); renderPreview(); renderHallazgos(); };head.appendChild(del);box.appendChild(head);
+
+const body = document.createElement("div");body.className = "sec-body";body.appendChild(field("Título de la sección", sec.titulo, v => { sec.titulo = v; head.querySelector("h3").textContent = v || "Sección sin título"; }));body.appendChild(field("Bajada", sec.bajada, v => sec.bajada = v));
+
+sec.notas.forEach((n, ni) => {const nb = document.createElement("div");nb.className = "nota";const nh = document.createElement("div");nh.className = "nota-head";nh.innerHTML = '<span class="tag">Nota '+(ni+1)+'</span>';const nd = document.createElement("button");nd.className = "mini danger"; nd.textContent = "Quitar"; nd.style.marginLeft = "auto";nd.onclick = () => { sec.notas.splice(ni,1); renderEditor(); renderPreview(); renderHallazgos(); };nh.appendChild(nd);nb.appendChild(nh);nb.appendChild(field("Titular", n.titulo, v => n.titulo = v));const r = document.createElement("div"); r.className = "row2";r.appendChild(field("Fuente / medio", n.medio, v => n.medio = v));r.appendChild(field("Fecha de publicación", n.fecha, v => n.fecha = v));nb.appendChild(r);nb.appendChild(field("Tipo de documento", n.tipo, v => n.tipo = v));nb.appendChild(field("Resumen", n.resumen, v => n.resumen = v, true));nb.appendChild(field("Por qué importa", n.porque, v => n.porque = v, true));nb.appendChild(field("Enlace al original", n.url, v => n.url = v));body.appendChild(nb);});
+
+const add = document.createElement("button");add.className = "mini";add.textContent = "+ Añadir nota en blanco";add.disabled = sec.notas.length >= MAX_NOTAS;add.style.marginTop = "12px";add.style.opacity = add.disabled ? .4 : 1;add.onclick = () => {if(sec.notas.length >= MAX_NOTAS){ flash("Máximo de "+MAX_NOTAS+" notas por sección."); return; }sec.notas.push({titulo:"Nuevo titular", medio:"", fecha:"", tipo:"", resumen:"", porque:"", url:""});renderEditor(); renderPreview(); renderHallazgos();};body.appendChild(add);const cnt = document.createElement("p");cnt.className = "limit";cnt.textContent = sec.notas.length + " de " + MAX_NOTAS + " notas";body.appendChild(cnt);box.appendChild(body);wrap.appendChild(box);});
+
+$("#btnAddSec").disabled = ed.secciones.length >= MAX_SEC;$("#btnAddSec").style.opacity = ed.secciones.length >= MAX_SEC ? .4 : 1;$("#limitTxt").textContent = ed.secciones.length + " de " + MAX_SEC + " secciones";} 
+
+/* ============================================================
+   BUSCADOR DE FUENTES
+   ============================================================ */
+function renderChips(){const c = $("#chips");c.innerHTML = "";SUGERENCIAS.forEach(s => {const b = document.createElement("button");b.className = "chip"; b.textContent = s;b.onclick = () => { $("#q").value = s; buscar(); };c.appendChild(b);});}
+
+function destinos(){const out = [];ed.secciones.forEach((sec, si) => {if(sec.notas.length < MAX_NOTAS){out.push({ v: "add:"+si, t: "Añadir a « " + (sec.titulo||"Sección "+(si+1)) + " »" });}sec.notas.forEach((n, ni) => {out.push({ v: "rep:"+si+":"+ni, t: "Sustituir S"+(si+1)+"·N"+(ni+1)+" — " + (n.titulo||"sin título").slice(0,42) });});});return out;} 
+
+function colocar(h, valor){if(!valor){ flash("Elige dónde colocar el hallazgo."); return; }const p = valor.split(":");const nota = { titulo:h.titulo, medio:h.medio, fecha:h.fecha, tipo:h.tipo, resumen:h.resumen, porque:h.porque, url:h.url };if(p[0] === "add"){const sec = ed.secciones[+p[1]];if(sec.notas.length >= MAX_NOTAS){ flash("Esa sección ya tiene 3 notas. Sustituye una."); return; }sec.notas.push(nota);flash("Nota añadida. Revísala en Redacción antes de publicar."); } else {ed.secciones[+p[1]].notas[+p[2]] = nota;flash("Nota sustituida. Revísala en Redacción antes de publicar."); }renderEditor(); renderPreview(); renderHallazgos();} 
+
+function renderHallazgos(){const box = $("#resultados");if(!hallazgos.length){if(!box.querySelector(".working")) box.innerHTML = '<div class="vacio">Escribe un tema o toca una de las búsquedas sugeridas.</div>';return;}box.innerHTML = "";const dest = destinos();hallazgos.forEach(h => {const d = document.createElement("div");d.className = "hallazgo";d.innerHTML = '<h4>'+esc(h.titulo)+'</h4>' + '<div class="procedencia">'+esc(h.medio||"Fuente sin identificar")+(h.fecha?' &nbsp;·&nbsp; '+esc(h.fecha):'')+(h.tipo?' &nbsp;·&nbsp; '+esc(h.tipo):'')+'</div>' + '<p>'+nl(h.resumen||"")+'</p>' + (h.porque ? '<div class="porque"><b>POR QUÉ IMPORTA</b>'+nl(h.porque)+'</div>' : '') + (h.url ? '<div style="margin-bottom:10px"><a class="fuente" href="'+esc(h.url)+'" target="_blank" rel="noopener">VERIFICAR EL ORIGINAL &rarr;</a></div>' : '');const row = document.createElement("div");row.className = "colocar";const sel = document.createElement("select");sel.innerHTML = '<option value="">Dónde colocarlo…</option>' + dest.map(o=>'<option value="'+o.v+'">'+esc(o.t)+'</option>').join("");const btn = document.createElement("button");btn.className = "mini go"; btn.textContent = "Colocar";btn.onclick = () => colocar(h, sel.value);const desc = document.createElement("button");desc.className = "mini"; desc.textContent = "Descartar";desc.onclick = () => { hallazgos = hallazgos.filter(x=>x!==h); renderHallazgos(); };row.appendChild(sel); row.appendChild(btn); row.appendChild(desc);d.appendChild(row);box.appendChild(d);});} 
+
+async function buscar(){const q = $("#q").value.trim();if(!q){ flash("Escribe un tema para buscar."); return; }const box = $("#resultados");box.innerHTML = '<div class="working">Rastreando fuentes sobre «'+esc(q)+'»… esto toma unos segundos.</div>';$("#btnSearch").disabled = true;const prompt = 'Busca en la web fuentes recientes y confiables sobre: "' + q + '", en el contexto de las relaciones públicas y la comunicación estratégica. ' + 'Prioriza informes con metodología declarada, estudios, medios con firma responsable y fuentes primarias, publicados en 2025 o 2026. Evita blogs promocionales de agencias.
+' + 'Devuelve EXACTAMENTE un arreglo JSON de 3 objetos, sin markdown, sin texto antes ni después. Cada objeto con estas claves:
+' + '"titulo": titular en español, máximo 9 palabras.
+' + '"medio": nombre de la publicación o institución.
+' + '"fecha": fecha de publicación en español.
+' + '"tipo": tipo de documento (Informe, Estudio, Reportaje, Análisis, Encuesta).
+' + '"resumen": 55 a 70 palabras en español, redactado para un público mixto de profesionales de RP y estudiantes universitarios; incluye los datos concretos y explica en pocas palabras cualquier término técnico. Sin citas textuales.
+' + '"porque": una oración sobre por qué importa para la práctica.
+' + '"url": enlace directo a la fuente.';try{const r = await fetch("https://api.anthropic.com/v1/messages", {method:"POST",headers:{"Content-Type":"application/json"},body: JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,messages:[{role:"user", content:prompt}],tools:[{type:"web_search_20250305", name:"web_search"}]})});const data = await r.json();const txt = (data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("\n");const clean = txt.replace(/```json|```/g,"").trim();const a = clean.indexOf("["), b = clean.lastIndexOf("]");if(a === -1 || b === -1) throw new Error("sin JSON");hallazgos = JSON.parse(clean.slice(a, b+1));renderHallazgos();flash(hallazgos.length + " hallazgos. Ninguno entra al boletín hasta que tú lo coloques.");}catch(e){hallazgos = [];box.innerHTML = '<div class="vacio">La búsqueda no devolvió resultados utilizables. Prueba con un tema más específico o vuelve a intentarlo.</div>';}finally{$("#btnSearch").disabled = false;}} 
+
+$("#btnSearch").onclick = buscar;$("#q").addEventListener("keydown", e => { if(e.key === "Enter") buscar(); });
+
+/* ============================================================ */
+document.querySelectorAll(".tab").forEach(t=>{t.onclick = () => {document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected", x===t ? "true":"false"));document.querySelectorAll(".pane").forEach(p=>p.classList.remove("on"));$("#pane-"+t.dataset.pane).classList.add("on");if(t.dataset.pane === "buscador") renderHallazgos();};});
+
+$("#btnAddSec").onclick = () => {if(ed.secciones.length >= MAX_SEC){ flash("El formato se limita a "+MAX_SEC+" secciones."); return; }ed.secciones.push({titulo:"Nueva sección", bajada:"", notas:[]});renderEditor(); renderPreview(); renderHallazgos();};
+
+$("#btnReset").onclick = () => {ed = JSON.parse(JSON.stringify(CONTENIDO));renderEditor(); renderPreview(); renderHallazgos();flash("Contenido original restaurado.");};
+
+$("#btnMas14").onclick = () => {const p = sumarDias(ed.fecha, 14);if(!p){ flash("Escribe la fecha así: 16 de agosto de 2026."); return; }ed.proxima = p;renderEditor(); renderPreview();flash("Próxima edición: " + p);};
+
+let confirmando = false;$("#btnCerrar").onclick = async () => {const b = $("#btnCerrar");if(!confirmando){confirmando = true;b.textContent = "Confirmar cierre de " + (ed.numero || "esta edición");b.classList.add("danger");setTimeout(()=>{ if(confirmando){ confirmando = false; b.textContent = "Cerrar edición y abrir la siguiente"; b.classList.remove("danger"); } }, 6000);return;}confirmando = false;b.textContent = "Cerrar edición y abrir la siguiente";b.classList.remove("danger");try{const slug = (ed.numero || "edicion").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-");await window.storage.set("rp360:archivo:" + slug, JSON.stringify(ed), true);const m = (ed.numero || "").match(/(\d+)/);if(m) ed.numero = ed.numero.replace(/\d+/, String(+m[1] + 1).padStart(m[1].length, "0"));if(ed.proxima) ed.fecha = ed.proxima;const p = sumarDias(ed.fecha, 14);if(p) ed.proxima = p;ed.entrada = "";ed.secciones.forEach(s => s.notas = []);await window.storage.set("rp360:edicion-actual", JSON.stringify(ed), true);renderEditor(); renderPreview(); renderHallazgos();renderArchivo();flash("Archivada. Ya puedes armar " + ed.numero + ".");}catch(e){flash("No se pudo archivar. Descarga el .html antes de cerrar.");}};
+
+async function verArchivo(key){try{const r = await window.storage.get(key, true);const previo = ed;ed = JSON.parse(r.value);const doc = fullDocument();ed = previo;$("#readerFrame").srcdoc = doc;document.body.classList.add("reading");window.scrollTo(0,0);}catch(e){ flash("No se pudo abrir esa edición."); }}
+
+async function renderArchivo(){const box = $("#archivo");if(!box) return;try{const r = await window.storage.list("rp360:archivo:", true);const keys = (r && r.keys) || [];if(!keys.length){ box.innerHTML = '<p class="limit">Aún no hay ediciones archivadas.</p>'; return; }box.innerHTML = '<p class="limit">Ediciones archivadas · accesibles desde este mismo enlace</p>';keys.sort().forEach(k => {const row = document.createElement("div");row.style.cssText = "display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px dashed var(--rule)";const name = document.createElement("span");name.style.cssText = "flex:1;font-family:var(--mono);font-size:11.5px;color:var(--slate)";name.textContent = k.replace("rp360:archivo:","").replace(/-/g," ");const ver = document.createElement("button");ver.className = "mini"; ver.textContent = "Ver";ver.onclick = () => verArchivo(k);row.appendChild(name); row.appendChild(ver);box.appendChild(row);});}catch(e){ box.innerHTML = '<p class="limit">Aún no hay ediciones archivadas.</p>'; }}
+
+$("#btnCopy").onclick = async () => {const html = buildNewsletter();try{await navigator.clipboard.writeText(html);flash("HTML copiado. Pégalo en tu plataforma de correo.");}catch(e){const ta = document.createElement("textarea");ta.value = html; document.body.appendChild(ta); ta.select();document.execCommand("copy"); ta.remove();flash("HTML copiado.");}};
+
+$("#btnDownload").onclick = () => {const blob = new Blob([fullDocument()], {type:"text/html"});const a = document.createElement("a");a.href = URL.createObjectURL(blob);a.download = "rp360-" + (ed.numero||"edicion").toLowerCase().replace(/[^a-z0-9]+/g,"-") + ".html";a.click();setTimeout(()=>URL.revokeObjectURL(a.href), 4000);flash("Archivo descargado. Súbelo a tu servidor para tener un enlace público.");};
+
+$("#btnPublish").onclick = async () => {try{await window.storage.set("rp360:edicion-actual", JSON.stringify(ed), true);renderPreview();document.body.classList.add("reading");window.scrollTo(0,0);flash("Edición publicada. Quien abra este enlace verá esta versión.");}catch(e){flash("No se pudo publicar. Descarga el .html como alternativa.");}};
+
+$("#btnReader").onclick = () => { renderPreview(); document.body.classList.add("reading"); window.scrollTo(0,0); };
+$("#btnBackEdit").onclick = () => { document.body.classList.remove("reading"); window.scrollTo(0,0); };
+
+/* ============================================================ */
+(async function init(){renderChips();renderEditor();renderPreview();renderArchivo();try{const r = await window.storage.get("rp360:edicion-actual", true);if(r && r.value){ ed = JSON.parse(r.value); renderEditor(); renderPreview(); }}catch(e){ /* aún no hay edición publicada */ }})();
+</script>
+</body>
+</html>
